@@ -1,0 +1,89 @@
+---
+title: "Project10"
+author: "Haroon Riyaz (PID A15377799)"
+date: "2/21/2022"
+output: pdf_document
+---
+
+# Section 1. Proportion of G/G in population
+
+Downloaded CSV file from Ensemble
+
+Read CSV file
+
+```{r}
+mxl <- read.csv("373531-SampleGenotypes-Homo_sapiens_Variation_Sample_rs8067378.csv")
+head(mxl)
+```
+
+```{r}
+table(mxl$Genotype..forward.strand.)
+```
+
+Calculate proportion
+```{r}
+round(table(mxl$Genotype..forward.strand.)/nrow(mxl) * 100, 2)
+```
+
+## Section 4: Population Scale Analysis
+
+How many samples do we have?
+
+```{r}
+expr <- read.table("rs8067378_ENSG00000172057.6.txt")
+head(expr)
+```
+```{r}
+# How many samples there are
+nrow(expr)
+```
+
+How many of each type?
+
+```{r}
+table(expr$geno)
+```
+
+Visualize data
+
+```{r}
+library(ggplot2)
+```
+
+Make Boxplot
+
+```{r}
+ggplot(expr) + aes(geno, exp, fill = geno) + geom_boxplot(notch = TRUE)
+```
+
+```{r}
+#expo <- ggplot(expr) + aes(geno, exp, fill = geno) + geom_boxplot(notch = TRUE)
+
+subset(expr$geno)
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

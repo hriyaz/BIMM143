@@ -1,0 +1,200 @@
+---
+title: "Project09"
+author: "Haroon Riyaz (PID A15377799)"
+date: "2/19/2022"
+output: pdf_document
+---
+Data from CSV file
+```{r}
+
+ExpMetMol <- read.csv("DataExportSummary.csv", row.names = 1)
+ExpMetMol
+  
+```
+
+> Q1. What percentage of structures in the PDB are solved by X-Ray and Electron Microscopy.
+
+```{r}
+PercXrayEM_Results <- 100*((ExpMetMol$X.ray + ExpMetMol$EM)/ExpMetMol$Total)
+PercXrayEM_Names <- row.names(ExpMetMol)
+PercXrayEM <- data.frame(PercXrayEM_Names, PercXrayEM_Results)
+PercXrayEM
+
+```
+
+> Q2. What proportion of structures in the PDB are protein?
+
+```{r}
+ProteinPerc <- ExpMetMol$Total
+ProteinPerc[1]/sum(ProteinPerc)
+
+```
+
+> Q3. Type HIV in the PDB website search box on the home page and determine how many HIV-1 protease structures are in the current PDB?
+
+There are *860* HIV-1 protease structures in the current PDB 
+
+> Q4: Water molecules normally have 3 atoms. Why do we see just one atom per water molecule in this structure?
+
+The program may not display all 3 atoms as the orientation of water molecules is constantly changing. The program could also be displaying 1 atom per water molecule to reduce visual clutter. 
+
+> Q5: There is a conserved water molecule in the binding site. Can you identify this water molecule? What residue number does this water molecule have (see note below)?
+
+The conserved water molecule near the binding site is: *HOH308:0*
+
+> Q6. As you have hopefully observed HIV protease is a homodimer (i.e. it is composed of two identical chains). With the aid of the graphic display and the sequence viewer extension can you identify secondary structure elements that are likely to only form in the dimer rather than the monomer?
+
+The beta-pleated sheets formed between the two chains (containing LEU 97 and ASN 98) likely formed as a result of the dimer as the residues on each strand stabilize the other strand to form a sheet.
+
+# 3. Introduction to Bio3D in R
+
+Bio3D is used for structural bioinformatics!
+
+Load Bio3D package
+```{r}
+library(bio3d)
+```
+
+Read and inspect 1HSG PDB file
+```{r}
+pdb <- read.pdb("1hsg")
+pdb
+```
+
+> Q7: How many amino acid residues are there in this pdb object? 
+
+*198* amino acid residues
+
+> Q8: Name one of the two non-protein residues? 
+
+HOH
+
+> Q9: How many protein chains are in this structure? 
+
+*2* protein chains
+
+~~~
+
+Access Attributes 
+```{r}
+attributes(pdb)
+
+#Access specific attribute 
+head(pdb$atom)
+```
+
+# 4. Comparative structure analysis of Adenylate Kinase
+
+> Q10. Which of the packages above is found only on BioConductor and not CRAN? 
+
+msa
+
+> Q11. Which of the above packages is not found on BioConductor or CRAN?: 
+
+bio3d-view
+
+> Q12. True or False? Functions from the devtools package can be used to install packages from GitHub and BitBucket?
+
+TRUE    
+
+~~~
+
+A BLAST search will be performed to identify structures related to chain A of ADK.
+
+```{r}
+library(bio3d)
+
+# Query sequence obtained with 'get.seq()'
+
+aa <- get.seq("1ake_A")
+aa
+
+```
+> Q13. How many amino acids are in this sequence, i.e. how long is this sequence? 
+
+*214* amino acids
+
+The BLAST search can now be performed 
+
+```{r}
+# Blast search 
+b <- blast.pdb(aa)
+```
+
+Visaulize top hits from BLAST
+
+```{r}
+hits <- plot(b)
+```
+Listing the top his only
+```{r}
+# List the 'top hits'
+head(hits$pdb.id)
+```
+
+Not all results were returned so vector will be used
+```{r}
+hits <- NULL
+hits$pdb.id <- c('1AKE_A','6S36_A','6RZE_A','3HPR_A','1E4V_A','5EJE_A','1E4Y_A','3X2S_A','6HAP_A','6HAM_A','4K46_A','3GMT_A','4PZL_A')
+```
+
+PDB files will be downloaded now
+```{r}
+# Download PDB files
+files <- get.pdb(hits$pdb.id, path="pdbs", split=TRUE, gzip=TRUE)
+```
+
+## Align and Superpose Structures
+
+FOLLOWING STEPS SKIPPED SINCE MUSCLE.EXE COULD NOT BE DOWNLOADED
+
+```{r}
+# Align releated PDBs
+#pdbs <- pdbaln(files, fit = TRUE)
+```
+
+```{r}
+# Vector for axis
+#ids <- basename.pdb(pdbs$id)
+
+# Draw Alignment
+#plot(pdbs, labels=ids)
+```
+
+## Principal Component Analysis 
+
+Describe variance in data (SKIPPED)
+
+```{r}
+# PCA performed
+#pc.xray <- pca(pdbs)
+#plot(pc.xray)
+```
+
+> Q14. What do you note about this plot? Are the black and colored lines similar or different? Where do you think they differ most and why?
+
+They're different from one another as the colored and black lines have a different number of fluctuations at different residue numbers; the colored lines have more fluctuations for nearly all residues (except ~ residue 75). The lines differ the most at around residue number 125 as the fluctuations differ the most, indicating a different flexibility. 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,376 @@
+---
+title: "ML Mini Project"
+author: "Haroon Riyaz (PID A15377799)"
+date: "2/14/2022"
+output: pdf_document
+---
+# 1. Exploratory Data Anlysis 
+
+Downlaod and prepare data!
+
+```{r}
+#Save Data into directory
+fna.data <- "WisconsinCancer.csv"
+
+#Store data as wisc.df
+wisc.df <- read.csv(fna.data, row.names=1)
+```
+
+Remove data that already provides answers to lab questions (diagnosis)!
+
+```{r}
+#Removes first column 
+wisc.data <- wisc.df[,-1]
+```
+
+Store diagnosis vector that can be used to check work later on!
+
+```{r}
+#Create diagnosis vector to be used later on
+diagnosis <- wisc.df[,1]
+diagnosis
+```
+
+> Q1. How many observations are in this dataset?
+
+Number of rows corresponds to observations so nrow will be used. Length of diagnosis can also be used.
+
+```{r}
+nrow(wisc.data)
+length(diagnosis)
+```
+
+> Q2. How many of the observations have a malignant diagnosis?
+
+Use table to find number of malignant cells
+
+```{r}
+num_malignant <- table(diagnosis)
+num_malignant["M"]
+```
+
+> Q3. How many variables/features in the data are suffixed with _mean?
+
+Grep() can be used to identify features with "_mean" and length() can then count all features with "_mean"
+
+```{r}
+#Assigns features to data_names vector
+data_names <- colnames(wisc.data)
+
+#Grep identifies features with "_mean" suffix and length counts all such features
+length(grep("_mean",data_names))
+```
+
+# 2. Principal Component Analysis
+
+Check mean and SD to see if data must be scaled!
+
+```{r}
+# Check the means and SD of the data
+colMeans(wisc.data)
+
+apply(wisc.data,2,sd)
+```
+
+```{r}
+# Perform PCA on wisc.data
+wisc.pr <- prcomp((wisc.data), scale = TRUE)
+```
+
+Look at summary of results
+
+```{r}
+#Summary
+summary(wisc.pr)
+```
+
+> Q4. From your results, what proportion of the original variance is captured by the first principal components (PC1)?
+
+```{r}
+pca.var <- wisc.pr$sdev^2
+
+pca.var.per <- round(pca.var/sum(pca.var)*100,1)
+pca.var.per[1]
+```
+
+> Q5. How many principal components (PCs) are required to describe at least 70% of the original variance in the data?
+
+I manually added the PCs until reaching the specified variance.
+
+```{r}
+pca.var.per[1] + pca.var.per[2] + pca.var.per[3]
+```
+3 PCs are required to describe at least 70% of the original variance in the data.
+
+> Q6. How many principal components (PCs) are required to describe at least 90% of the original variance in the data?
+
+```{r}
+pca.var.per[1] + pca.var.per[2] + pca.var.per[3] + pca.var.per[4] + pca.var.per[5] + pca.var.per[6] + pca.var.per[7]
+```
+7 PCs are required to describe at least 90% of the original variance in the data.
+
+## Interpreting PCA Results
+
+Biplot of wisc.pr
+
+```{r}
+biplot(wisc.pr)
+```
+
+> Q7. What stands out to you about this plot? Is it easy or difficult to understand? Why?
+
+It is difficult to understand and is very messy due to the many labels and data points. Since row_names are used as plotting characters it is hard to see the data as the variable names block the graph. This plot also incorporates many hundreds of points which obscures individual data points. 
+
+
+Let's generate a more standard scatter plot!
+
+```{r}
+# Scatter plot of components 1 and 2
+
+#diagnosis[grep("M", diagnosis)] <- "red"
+#diagnosis[grep("B", diagnosis)] <- "black"
+
+plot(wisc.pr$x[,1], wisc.pr$x[,2], col = as.factor(diagnosis) ,xlab="PC1", ylab="PC2")
+```
+
+
+```{r}
+# Scatter plot of components 1 and 2
+
+#diagnosis[grep("M", diagnosis)] <- "red"
+#diagnosis[grep("B", diagnosis)] <- "black"
+
+plot(wisc.pr$x[,1], wisc.pr$x[,3], col = as.factor(diagnosis) ,xlab="PC1", ylab="PC3")
+```
+> Q8. Generate a similar plot for principal components 1 and 3. What do you notice about these plots?
+
+There is less distinction between malignant and benign cells (more mixture) for components 1 and 3 compared to components 1 and 2 since components 1 and 2 highlight patterns the most while component 3 does less so and shows less variation, hence why both the malignant and benign data are more mixed. 
+
+```{r}
+# Create a data.frame for ggplot
+df <- as.data.frame(wisc.pr$x)
+df$diagnosis <- diagnosis
+
+# Load ggplot2 
+library(ggplot2)
+
+# Scatter plot colored by diagnosis
+ggplot(df) + 
+  aes(PC1, PC2, col= as.factor(diagnosis)) + 
+  geom_point()
+```
+### Variance Explained
+
+```{r}
+# Variance of each component
+pr.var <- wisc.pr$sdev^2
+head(pr.var)
+```
+
+Principal Variance Proportion
+
+```{r}
+# Variance explained by each PC: pve
+pve <- pr.var / sum(pr.var)
+
+# Plot variance explained by each PC
+plot(pve, xlab = "Principal Component", 
+     ylab = "Proportion of Variance Explained", 
+     ylim = c(0, 1), type = "o")
+```
+```{r}
+# Alternative screen plot of the same data
+barplot(pve, ylab = "Precent of Variance Explained",
+     names.arg=paste0("PC",1:length(pve)), las=2, axes = FALSE)
+axis(2, at=pve, labels=round(pve,2)*100 )
+```
+### Communicating PCA Results
+
+>Q9. For the first principal component, what is the component of the loading vector (i.e. wisc.pr$rotation[,1]) for the feature concave.points_mean?
+
+```{r}
+wisc.pr$rotation[,1]
+```
+
+-0.26085376
+
+>Q10. What is the minimum number of principal components required to explain 80% of the variance of the data?
+
+```{r}
+pca.var.per[1] + pca.var.per[2] + pca.var.per[3] + pca.var.per[4] + pca.var.per[5]
+```
+
+5 PCs are required to describe at least 80% of the original variance in the data.
+
+# 3. Hierarchical Clustering
+
+```{r}
+# Scale wisc.data data with scale()
+data.scaled <- scale(wisc.data)
+```
+
+Calculate euclidean distance between observations
+
+```{r}
+data.dist <- dist(data.scaled)
+```
+
+Create a hierarchical clustering model 
+
+```{r}
+wisc.hclust <- hclust(data.dist, method = "complete")
+```
+
+> Q11. Using the plot() and abline() functions, what is the height at which the clustering model has 4 clusters?
+
+```{r}
+plot(wisc.hclust)
+abline(h=4, col="red", lty=2)
+```
+The clustering model has 4 clusters at a height of 20
+
+### Selecting Number of Clusters
+
+```{r}
+wisc.hclust.clusters <- cutree(wisc.hclust, k = 4)
+```
+
+```{r}
+table(wisc.hclust.clusters, diagnosis)
+```
+
+> Q12. Can you find a better cluster vs diagnoses match by cutting into a different number of clusters between 2 and 10?
+
+```{r}
+
+wisc.hclust_test.clusters <- cutree(wisc.hclust, k = 3)
+table(wisc.hclust_test.clusters, diagnosis) 
+
+wisc.hclust_test.clusters <- cutree(wisc.hclust, k = 8)
+table(wisc.hclust_test.clusters, diagnosis)
+
+```
+
+No, having a cluster number lower than 4 results in a majority of the benign and malignant cells being in the same cluster. Have more then 4 clusters does differentiate malignant and beignin cells more than the one with 4 clusters. 
+
+> Q13. Which method gives your favorite results for the same data.dist dataset? Explain your reasoning.
+
+```{r}
+plot(hclust(data.dist, method = "ward.D2"))
+```
+
+
+Ward.D2 gives my favorite results since the branches are more organized and not as messy as the other methods since variance within clusters is lessened.
+
+# 4. K-means Clustering
+```{r}
+wisc.km <- kmeans(scale(wisc.data), centers= 2, nstart= 20)
+```
+
+```{r}
+table(wisc.km$cluster, diagnosis)
+# Black = Benign, Red = Malignant
+```
+
+> Q14. How well does k-means separate the two diagnoses? How does it compare to your hclust results?
+
+The two diagnoses are as well-separated as in the hclust results. Both hclust and k-means show the majority of malignant and benign cells being separated into different clusters and each cluster only has a small proportion of cells which are the opposite (few malignant cells in benging cluster, vice versa). The diagnoses are separated well with both methods. 
+
+```{r}
+table(wisc.hclust.clusters, wisc.km$cluster)
+```
+
+# 5. Combining Methods
+```{r}
+wisc.pr.hclust <- hclust(dist(wisc.pr$x[,1:7]),"ward.D2")
+```
+
+
+```{r}
+grps <- cutree(wisc.pr.hclust, k=2)
+table(grps)
+
+```
+
+
+```{r}
+table(grps, diagnosis)
+```
+
+```{r}
+plot(wisc.pr$x[,1:2], col=grps)
+```
+```{r}
+#diagnosis[grep("M", diagnosis)] <- "red"
+#diagnosis[grep("B", diagnosis)] <- "black"
+
+plot(wisc.pr$x[,1:2], col=as.factor(diagnosis))
+```
+```{r}
+wisc.pr.hclust.clusters <- cutree(wisc.pr.hclust, k=2)
+```
+
+> Q15. How well does the newly created model with four clusters separate out the two diagnoses?
+
+```{r}
+# Compare to actual diagnoses
+# Black = Benign, Red = Malignant
+table(wisc.pr.hclust.clusters, diagnosis)
+```
+
+The model separates both well as each cluster possesses more than a majority of one type of cell. Each cluster is realtively homogenous and contains few of the other cell type.
+
+> Q16. How well do the k-means and hierarchical clustering models you created in previous sections (i.e. before PCA) do in terms of separating the diagnoses? Again, use the table() function to compare the output of each model (wisc.km$cluster and wisc.hclust.clusters) with the vector containing the actual diagnoses.
+
+Both models do a good job at separating the diagnoses as the benign and malignant cells are mostly in separate clusters.
+```{r}
+table(wisc.km$cluster, diagnosis)
+table(wisc.hclust.clusters, diagnosis)
+
+# Compare to actual diagnoses
+# Black = Benign, Red = Malignant
+```
+
+# 6. Sensitivity/Specifciity 
+
+> Q17. Which of your analysis procedures resulted in a clustering model with the best specificity? How about sensitivity?
+
+```{r}
+#KM
+SensKM <- 175/(175+37)
+SensKM
+SensHclust <- 165/(165+5+40+2)
+SensHclust
+SpecKM <- 343/(343+13)
+SpecKM
+SpecHclust <- 343/(343+12+2)
+SpecHclust
+```
+K-means had the best specificity but this was only by a very small margin (.963 vs .961).
+
+K-means had the best sensitivity (0.83).
+
+# 7.Prediction
+```{r}
+#url <- "new_samples.csv"
+url <- "https://tinyurl.com/new-samples-CSV"
+new <- read.csv(url)
+npc <- predict(wisc.pr, newdata=new)
+npc
+```
+
+```{r}
+# col = g WAS NOT WORKING! 
+plot(wisc.pr$x[,1:2])
+points(npc[,1], npc[,2], col="blue", pch=16, cex=3)
+text(npc[,1], npc[,2], c(1,2), col="white")
+```
+
+> Q18. Which of these new patients should we prioritize for follow up based on your results?
+
+Patient 2 should be followed up since his data was in the same region as malignant cell data indicating he has cancer. 
+
+
+
+
+
