@@ -1,0 +1,109 @@
+---
+title: "FtG_Project"
+author: "Haroon Riyaz (PID A15377799)"
+date: "3/10/2022"
+output: html_document
+---
+
+```{r}
+library(bio3d)
+```
+
+```{r}
+alignFtG <- read.fasta("FtGProject_FASTA.txt")
+seqidFtG <- seqidentity(alignFtG)
+```
+
+```{r}
+library(pheatmap)
+```
+
+```{r}
+pheatmap(seqidFtG)
+```
+
+
+```{r}
+alignFtG
+```
+
+
+
+
+
+```{r}
+conFtG <- consensus(alignFtG, cutoff = 0.1)
+conFtG$seq
+```
+
+
+```{r}
+con <- conFtG$seq
+```
+
+```{r}
+GentooSeq <- alignFtG$ali["Gentoo_Penguin",1:199]
+GentooSeq
+```
+
+
+```{r}
+seqidFtG
+#library(matrixStats)
+#rowMaxs(seqidFtG, value = FALSE)
+```
+
+
+```{r}
+#seq <- get.seq(alignFtG,"Human")
+blast <- blast.pdb(GentooSeq)
+#plot(blast, cutoff=3)
+```
+
+
+```{r}
+blast$hit.tbl[1:3,]
+pdb_id <- blast$hit.tbl[1:3,"pdb.id"]
+identity_Q9 <- blast$hit.tbl[1:3,"identity"]
+evalue_Q9 <- blast$hit.tbl[1:3,"evalue"]
+#plot.blast(blast_results)
+```
+```{r}
+ids <- c("1IIU_A", "4O9S_A", "3FMZ_A")
+annot <- pdb.annotate(ids)
+annot
+tech_Q9 <- annot$experimentalTechnique
+res_Q9 <- annot$resolution
+source_Q9 <- annot$source
+```
+
+```{r}
+plot.blast(blast)
+```
+
+
+```{r}
+Q9DF <- data.frame(pdb_id, tech_Q9, res_Q9, source_Q9, evalue_Q9, identity_Q9)
+
+colnames(Q9DF) <- c("ID", "Technique", "Resolution", "Source", "Evalue", "Identity")
+
+print(Q9DF)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
